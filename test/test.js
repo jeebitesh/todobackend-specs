@@ -40,7 +40,7 @@ describe('Create todo item', function() {
 
     it('should return a 201 CREATED response', function() {
         return assert(result, "header.location").to.match(/^https?:\/\/.+\/todos\/[/d]+$/);
-    })
+    });
 
     it('should recieve the location hyperlink', function() {
         var item = result.then(function(res) {
@@ -54,6 +54,53 @@ describe('Create todo item', function() {
     });
 });
 
+describe('Update todo item', function() {
+    var result;
+
+    beforeEach(function(done) {
+        post(url, {title: 'Walk the dog'}).then(function(res) {
+            location = res.header['location'];
+            done();
+        });
+    });
+
+    it('should have completed set to true after PUT update', function() {
+        var result = update(location, 'PUT', {'completed':true});
+        return assert(result, "body.completed").to.be.true;
+    })
+
+    it('should have completed set to true after PATCH update', function() {
+        var result = update(location, 'PATCH', {'completed':true});
+        return assert(result, "body.completed").to.be.true;
+    })
+
+    after(function() {
+        return del(url);
+    });
+});
+
+describe('Delete todo item', function() {
+    var result;
+
+    beforeEach(function(done) {
+        post(url, {title: 'Walk the dog'}).then(function(res) {
+            location = res.header['location'];
+            done();
+        });
+    });
+
+    it('should return a 204 NO CONTENT response', function() {
+        var result = del(location);
+        return assert(result, "status").to.equal(204);
+    });
+
+    it('should recieve the location hyperlink', function() {
+        var result = del(location).then(function(res) {
+            return get(location);
+        });
+        return expect(result).to.eventually.be.rejectedWith('Not Found');
+    });
+});
 /*
 *
 */
