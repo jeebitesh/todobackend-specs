@@ -2,22 +2,20 @@ var chai = require('chai'),
     should = chai.should,
     expect = chai.expect,
     Promise = require('bluebird'),
-    request = require('superagent-promise')(require('superagent'),Promise),
+    request = require('superagent-promise')(require('superagent'), Promise),
     chaiAsPromised = require('chai-as-promised');
-
 chai.use(chaiAsPromised);
-var url = process.env.URL || 'https://localhost:8000/todo';
+var url = process.env.url || 'http://localhost:8000/todos';
 
 describe('Cross Origin Requests', function() {
     var result;
 
     before(function() {
-        result = request('OPTIONS', url)
-            .set('Origin', 'https://someplace.com')
-            .end();
+        console.log(url);
+        result = request('OPTIONS', url).set('Origin', 'http://someplace.com').end();
     });
 
-    it('should return the correct CORS Headers', function () {
+    it('should return the correct CORS headers', function () {
         return assert(result, "header").to.contain.all.keys([
             'access-control-allow-origin',
             'access-control-allow-methods',
@@ -26,9 +24,10 @@ describe('Cross Origin Requests', function() {
     });
 
     it('should allow all origins', function() {
-        return assert(result, "header.access-control-allow-origin").to.equal('*');
-    })
-})
+        //console.log(assert(result, " ").to.equals('*'));
+        return assert(result, "header.access-control-allow-origin").to.equal("*");
+    });
+});
 
 
 describe('Create todo item', function() {
@@ -39,7 +38,7 @@ describe('Create todo item', function() {
     });
 
     it('should return a 201 CREATED response', function() {
-        return assert(result, "header.location").to.match(/^https?:\/\/.+\/todos\/[/d]+$/);
+        return assert(result, "header.location").to.match(/^http?:\/\/.+\/todos\/[\d]+$/);
     });
 
     it('should recieve the location hyperlink', function() {
@@ -65,12 +64,12 @@ describe('Update todo item', function() {
     });
 
     it('should have completed set to true after PUT update', function() {
-        var result = update(location, 'PUT', {'completed':true});
+        var result = update(location, 'PUT', {'completed': true});
         return assert(result, "body.completed").to.be.true;
     })
 
     it('should have completed set to true after PATCH update', function() {
-        var result = update(location, 'PATCH', {'completed':true});
+        var result = update(location, 'PATCH', {'completed': true});
         return assert(result, "body.completed").to.be.true;
     })
 
@@ -104,17 +103,13 @@ describe('Delete todo item', function() {
 /*
 *
 */
+// POST requests with data and return promises
 function post(url, data) {
-    return request.post(url)
-        .set('Content-Type', 'application/json')
-        .set('Accept', 'application/json')
-        .send(data)
-        .end();
+    return request.post(url).set('Content-Type', 'application/json').set('Accept', 'application/json').send(data).end();
 }
+
 function get(url){
-    return request.get(url)
-        .set('Accept', 'application/json')
-        .end();
+    return request.get(url).set('Accept', 'application/json').end();
 }
 
 function del(url){
@@ -122,13 +117,9 @@ function del(url){
 }
 
 function update(url, method, data) {
-    return request(method, url)
-        .set('Content-Type', 'application/json')
-        .set('Accept', 'application/json')
-        .send(data)
-        .end();
+    return request(method, url).set('Content-Type', 'application/json').set('Accept', 'application/json').send(data).end();
 }
 
 function assert(result, prop) {
-    return expect(result).to.eventually.have.deep.property(prop)
+    return expect(result).to.eventually.have.deep.nested.property(prop)
 }
